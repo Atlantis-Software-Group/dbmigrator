@@ -44,12 +44,17 @@ public class UpdateDatabaseService : IUpdateDatabaseService
 
         List<MigrationRecord> migrationMap = await BuildMigrationMap(context);
 
+        Logger.LogInformation("Migration Map: {@map} for DbContext: {dbContext}", migrationMap, context.GetType().Name);
+
         foreach ( MigrationRecord migration in migrationMap )
         {
-            if ( !migration.MigrationAlreadyApplied )
+            if ( !migration.MigrationAlreadyApplied || migration.IsLastMigration )
             {
-                await migrator.MigrateAsync(migration.Migration);
-                migration.MigrationAlreadyApplied = true;
+                if ( !migration.MigrationAlreadyApplied )
+                {
+                    await migrator.MigrateAsync(migration.Migration);
+                    migration.MigrationAlreadyApplied = true;
+                }
 
                 foreach ( SeedDataRecord seedData in migration.SeedDataRecords )
                 {
@@ -61,7 +66,7 @@ public class UpdateDatabaseService : IUpdateDatabaseService
 
                     // update SeedDataScriptHistory
                     await context.Database.InsertSeedScriptHistoryRow(seedData.SeedScriptType.Name, migration.Migration);
-                }
+                }                
             }
         }
         
@@ -79,14 +84,18 @@ public class UpdateDatabaseService : IUpdateDatabaseService
 
         string? lastMigration = await context.Database.GetLastAppliedMigrationAsync();
 
+        Logger.LogInformation("Last Migration: {lastMigration} ran on DbContext: {dbContext}", lastMigration, context.GetType().Name);
+
         if ( lastMigration is not null )
         {
             // get SeedScripts for this migration. 
             List<SeedDataRecord> records = await GetSeedDataRecords(context, lastMigration);
-            map.Add(new MigrationRecord(lastMigration, true, records));
+            map.Add(new MigrationRecord(lastMigration, true, records, true));
         }
 
         IEnumerable<string> pendingMigrations = await context.Database.GetPendingMigrationsAsync();
+
+        Logger.LogInformation("{pendingMigrationCount} Pending Migration(s) found - {@PendingMigrations}", pendingMigrations.Count(), pendingMigrations);
 
         foreach ( string pendingMigration in pendingMigrations )
         {
@@ -103,6 +112,7 @@ public class UpdateDatabaseService : IUpdateDatabaseService
         List<SeedDataRecord> records = new List<SeedDataRecord>();
 
         IEnumerable<string> appliedSeedRecords = await context.Database.GetSeedScriptsForMigration(migrationName);
+        Logger.LogInformation("Migration Name: {migrationName} - Applied Seed Records: {appliedSeedRecords}", migrationName, appliedSeedRecords);
 
         IEnumerable<Type> seedScriptTypes = AssemblyInformation.GetSeedScripts(context.GetType().Name, migrationName, HostEnvironment.EnvironmentName);
         foreach ( Type seedScriptType in seedScriptTypes )

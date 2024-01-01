@@ -19,10 +19,10 @@ public class Seeder : ISeeder
     public async Task SeedAsync(Type seedDataType)
     {        
         Logger.LogInformation("Starting {scriptName}",seedDataType.Name);
-        ISeedData instance = (ISeedData)ActivatorUtilities.CreateInstance(ServiceProvider, seedDataType);
 
         try
         {
+            ISeedData instance = (ISeedData)ActivatorUtilities.CreateInstance(ServiceProvider, seedDataType);
             await instance.Seed();   
         }
         catch (Exception e)

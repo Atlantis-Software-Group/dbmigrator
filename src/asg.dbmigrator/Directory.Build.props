@@ -1,6 +1,7 @@
 <Project>
     <PropertyGroup Condition="'$(Configuration)'=='Debug'">    
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-        <IncludeSymbols>true</IncludeSymbols>
+        <IncludeSymbols>true</IncludeSymbols>        
+        <Version>1.0.1</Version>
     </PropertyGroup>
 </Project>

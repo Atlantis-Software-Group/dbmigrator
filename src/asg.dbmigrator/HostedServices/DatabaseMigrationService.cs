@@ -112,10 +112,6 @@ public class DatabaseMigrationService : IHostedService
 
         UpdateDatabaseService = sp.GetRequiredService<IUpdateDatabaseService>();
 
-        // ApplicationDbContext applicationDbContext = sp.GetRequiredService<ApplicationDbContext>();
-        // ConfigurationDbContext configurationDbContext = sp.GetRequiredService<ConfigurationDbContext>();
-        // PersistedGrantDbContext persistedGrantDbContext = sp.GetRequiredService<PersistedGrantDbContext>();
-
         foreach ( Type dbType in Options.DbContextTypes )
         {
             DbContext dbContext = (DbContext)sp.GetRequiredService(dbType);
