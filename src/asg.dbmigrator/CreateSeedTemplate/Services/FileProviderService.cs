@@ -23,6 +23,15 @@ public class FileProviderService : IFileProviderService
             return false; 
         }
 
+        string? directoryPath = Path.GetDirectoryName(fullPath);
+
+        if ( string.IsNullOrWhiteSpace(directoryPath) )
+        {
+            return false;
+        }
+
+        Directory.CreateDirectory(directoryPath);                
+
         try
         {
             await File.WriteAllBytesAsync(fullPath, content);
